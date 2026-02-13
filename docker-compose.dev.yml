@@ -1,0 +1,96 @@
+services:
+  web:
+    working_dir: /app
+    command: >
+      sh -c "corepack enable &&
+      if [ ! -d node_modules/.pnpm ]; then pnpm install --frozen-lockfile=false; fi &&
+      pnpm --filter web dev"
+    environment:
+      CHOKIDAR_USEPOLLING: 'true'
+      WATCHPACK_POLLING: 'true'
+      ORCHESTRATOR_INTERNAL_URL: ${ORCHESTRATOR_INTERNAL_URL:-http://orchestrator-api:3001}
+    volumes:
+      - .:/app
+      - web_node_modules:/app/node_modules
+      - web_pnpm_store:/root/.local/share/pnpm/store
+
+  orchestrator-api:
+    working_dir: /app
+    command: >
+      sh -c "corepack enable &&
+      if [ ! -d node_modules/.pnpm ]; then pnpm install --frozen-lockfile=false; fi &&
+      pnpm prisma:deploy &&
+      pnpm exec tsx watch --tsconfig apps/orchestrator-api/tsconfig.json apps/orchestrator-api/src/main.ts"
+    environment:
+      CHOKIDAR_USEPOLLING: 'true'
+      ENABLE_SWAGGER: 'false'
+      DATABASE_URL: ${DATABASE_URL:-postgresql://postgres:postgres@postgres:5432/restlab?schema=public}
+      ORCHESTRATOR_PORT: 3001
+      ORCHESTRATOR_SELF_URL: http://orchestrator-api:3001
+      WEB_URL: http://web:3000
+      SVC_ALPHA_URL: http://svc-alpha:3011
+      SVC_BETA_URL: http://svc-beta:3012
+      SVC_GAMMA_URL: http://svc-gamma:3013
+    volumes:
+      - .:/app
+      - orchestrator_node_modules:/app/node_modules
+      - orchestrator_pnpm_store:/root/.local/share/pnpm/store
+
+  svc-alpha:
+    working_dir: /app
+    command: >
+      sh -c "corepack enable &&
+      if [ ! -d node_modules/.pnpm ]; then pnpm install --frozen-lockfile=false; fi &&
+      pnpm exec tsx watch --tsconfig apps/svc-alpha/tsconfig.json apps/svc-alpha/src/main.ts"
+    environment:
+      CHOKIDAR_USEPOLLING: 'true'
+      ENABLE_SWAGGER: 'false'
+      SVC_ALPHA_PORT: 3011
+      SVC_BETA_URL: http://svc-beta:3012
+      SVC_GAMMA_URL: http://svc-gamma:3013
+    volumes:
+      - .:/app
+      - alpha_node_modules:/app/node_modules
+      - alpha_pnpm_store:/root/.local/share/pnpm/store
+
+  svc-beta:
+    working_dir: /app
+    command: >
+      sh -c "corepack enable &&
+      if [ ! -d node_modules/.pnpm ]; then pnpm install --frozen-lockfile=false; fi &&
+      pnpm exec tsx watch --tsconfig apps/svc-beta/tsconfig.json apps/svc-beta/src/main.ts"
+    environment:
+      CHOKIDAR_USEPOLLING: 'true'
+      ENABLE_SWAGGER: 'false'
+      SVC_BETA_PORT: 3012
+    volumes:
+      - .:/app
+      - beta_node_modules:/app/node_modules
+      - beta_pnpm_store:/root/.local/share/pnpm/store
+
+  svc-gamma:
+    working_dir: /app
+    command: >
+      sh -c "corepack enable &&
+      if [ ! -d node_modules/.pnpm ]; then pnpm install --frozen-lockfile=false; fi &&
+      pnpm exec tsx watch --tsconfig apps/svc-gamma/tsconfig.json apps/svc-gamma/src/main.ts"
+    environment:
+      CHOKIDAR_USEPOLLING: 'true'
+      ENABLE_SWAGGER: 'false'
+      SVC_GAMMA_PORT: 3013
+    volumes:
+      - .:/app
+      - gamma_node_modules:/app/node_modules
+      - gamma_pnpm_store:/root/.local/share/pnpm/store
+
+volumes:
+  web_node_modules:
+  web_pnpm_store:
+  orchestrator_node_modules:
+  orchestrator_pnpm_store:
+  alpha_node_modules:
+  alpha_pnpm_store:
+  beta_node_modules:
+  beta_pnpm_store:
+  gamma_node_modules:
+  gamma_pnpm_store:

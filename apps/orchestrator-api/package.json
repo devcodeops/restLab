@@ -1,0 +1,31 @@
+{
+  "name": "orchestrator-api",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build": "nest build",
+    "dev": "nest start --watch",
+    "start": "sh -c 'for d in /app/apps/orchestrator-api/dist /app/dist/apps/orchestrator-api /app/dist/src /app/dist; do if [ -d \"$d\" ]; then f=$(find \"$d\" -type f -name main.js | head -n 1); if [ -n \"$f\" ]; then exec node \"$f\"; fi; fi; done; echo \"main.js not found for orchestrator-api\"; find /app/apps/orchestrator-api/dist /app/dist -type f -name \"*.js\" 2>/dev/null | head -n 50; exit 1'",
+    "lint": "echo 'lint not configured for orchestrator-api'",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@nestjs/common": "^10.4.15",
+    "@nestjs/core": "^10.4.15",
+    "@nestjs/platform-express": "^10.4.15",
+    "@nestjs/swagger": "^7.4.2",
+    "@prisma/client": "^6.2.1",
+    "@restlab/db": "workspace:*",
+    "@restlab/shared": "workspace:*",
+    "class-transformer": "^0.5.1",
+    "class-validator": "^0.14.1",
+    "reflect-metadata": "^0.2.2",
+    "rxjs": "^7.8.1"
+  },
+  "devDependencies": {
+    "@nestjs/cli": "^10.4.9",
+    "@nestjs/schematics": "^10.2.3",
+    "@nestjs/testing": "^10.4.15",
+    "typescript": "^5.7.2"
+  }
+}

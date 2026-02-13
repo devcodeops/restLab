@@ -1,0 +1,57 @@
+# Dependencies
+node_modules/
+**/node_modules/
+.pnpm-store/
+.npm/
+
+# Build outputs
+dist/
+**/dist/
+build/
+**/build/
+.next/
+**/.next/
+out/
+coverage/
+**/coverage/
+*.tsbuildinfo
+
+# Caches
+.cache/
+**/.cache/
+.turbo/
+.eslintcache
+
+# Logs and runtime files
+*.log
+logs/
+*.pid
+*.pid.lock
+
+# Environment and secrets
+.env
+.env.*
+**/.env
+**/.env.*
+!.env.example
+!**/.env.example
+
+# Local databases and dumps
+*.sqlite
+*.sqlite3
+*.db
+*.sql.gz
+*.dump
+
+# Certificates and private keys
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
+
+# IDE / OS
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

@@ -1,0 +1,112 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: restlab-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-restlab}
+    ports:
+      - '5432:5432'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres -d restlab']
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  svc-alpha:
+    build:
+      context: .
+      dockerfile: apps/svc-alpha/Dockerfile
+    environment:
+      SVC_ALPHA_PORT: 3011
+      SVC_BETA_URL: http://svc-beta:3012
+      SVC_GAMMA_URL: http://svc-gamma:3013
+    ports:
+      - '3011:3011'
+    depends_on:
+      svc-beta:
+        condition: service_started
+      svc-gamma:
+        condition: service_started
+    healthcheck:
+      test: ['CMD-SHELL', 'wget -q -O /dev/null http://127.0.0.1:3011/health || exit 1']
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  svc-beta:
+    build:
+      context: .
+      dockerfile: apps/svc-beta/Dockerfile
+    environment:
+      SVC_BETA_PORT: 3012
+    ports:
+      - '3012:3012'
+    healthcheck:
+      test: ['CMD-SHELL', 'wget -q -O /dev/null http://127.0.0.1:3012/health || exit 1']
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  svc-gamma:
+    build:
+      context: .
+      dockerfile: apps/svc-gamma/Dockerfile
+    environment:
+      SVC_GAMMA_PORT: 3013
+    ports:
+      - '3013:3013'
+    healthcheck:
+      test: ['CMD-SHELL', 'wget -q -O /dev/null http://127.0.0.1:3013/health || exit 1']
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  orchestrator-api:
+    build:
+      context: .
+      dockerfile: apps/orchestrator-api/Dockerfile
+    environment:
+      DATABASE_URL: ${DATABASE_URL:-postgresql://postgres:postgres@postgres:5432/restlab?schema=public}
+      ORCHESTRATOR_PORT: 3001
+      ORCHESTRATOR_SELF_URL: http://orchestrator-api:3001
+      WEB_URL: http://web:3000
+      SVC_ALPHA_URL: http://svc-alpha:3011
+      SVC_BETA_URL: http://svc-beta:3012
+      SVC_GAMMA_URL: http://svc-gamma:3013
+    ports:
+      - '3001:3001'
+    depends_on:
+      postgres:
+        condition: service_healthy
+      svc-alpha:
+        condition: service_started
+    healthcheck:
+      test: ['CMD-SHELL', 'wget -q -O /dev/null http://127.0.0.1:3001/health || exit 1']
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    environment:
+      ORCHESTRATOR_INTERNAL_URL: ${ORCHESTRATOR_INTERNAL_URL:-http://orchestrator-api:3001}
+    ports:
+      - '3000:3000'
+    depends_on:
+      orchestrator-api:
+        condition: service_started
+    healthcheck:
+      test: ['CMD-SHELL', 'wget -q -O /dev/null http://127.0.0.1:3000 || exit 1']
+      interval: 10s
+      timeout: 5s
+      retries: 20
+
+volumes:
+  postgres_data:
