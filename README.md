@@ -1,6 +1,6 @@
 # REST Lab - Microservices Traffic Control Center
 
-Laboratorio local con microservicios Node/TypeScript para generar trafico (ok, errores, latencia, timeout) y visualizar resultados con un dashboard. Esta base esta lista para conectar mas adelante service mesh y stack de observabilidad.
+A local Node/TypeScript microservices lab to generate traffic (ok, errors, latency, timeout) and visualize results with a dashboard. This foundation is ready to integrate a service mesh and observability stack later.
 
 ## Stack
 - Frontend: Next.js App Router + Tailwind
@@ -8,37 +8,37 @@ Laboratorio local con microservicios Node/TypeScript para generar trafico (ok, e
 - DB: Postgres + Prisma
 - Infra: Docker Compose
 
-## Estructura
-- `apps/web`: Centro de Control web
-- `apps/orchestrator-api`: API para runs, query de resultados, SSE y proxy chaos
-- `apps/svc-alpha`: servicio con llamadas reales a beta/gamma
-- `apps/svc-beta`: microservicio de trabajo
-- `apps/svc-gamma`: microservicio de trabajo
-- `packages/shared`: tipos, logger JSON, correlacion, wrapper HTTP, chaos utils
+## Structure
+- `apps/web`: Web Control Center
+- `apps/orchestrator-api`: API for runs, result queries, SSE, and chaos proxying
+- `apps/svc-alpha`: service with real calls to beta/gamma
+- `apps/svc-beta`: worker microservice
+- `apps/svc-gamma`: worker microservice
+- `packages/shared`: types, JSON logger, correlation, HTTP wrapper, chaos utils
 - `packages/db`: Prisma client singleton
-- `prisma`: schema, migraciones, seed
+- `prisma`: schema, migrations, seed
 
-## Arranque rapido
+## Quick start
 1. `cd restLab`
 2. `pnpm install`
 3. `docker compose up --build`
 
 ## Dev mode (hot reload)
-Para desarrollo sin recompilar imagen en cada cambio, usa el compose override de dev:
+For development without rebuilding images on every change, use the dev compose override:
 
 1. `cd restLab`
 2. `pnpm docker:dev`
 
-Esto levanta:
-- Next.js en modo `dev` (hot reload en frontend)
-- APIs NestJS en modo watch con `tsx` usando el `tsconfig` de cada app (incluyendo decorators) para `orchestrator-api`, `svc-alpha`, `svc-beta`, `svc-gamma`
-- Postgres en el mismo stack
+This starts:
+- Next.js in `dev` mode (frontend hot reload)
+- NestJS APIs in watch mode with `tsx` using each app's `tsconfig` (including decorators) for `orchestrator-api`, `svc-alpha`, `svc-beta`, `svc-gamma`
+- Postgres in the same stack
 
-Notas:
-- El primer arranque instala dependencias dentro de cada contenedor; luego se reutilizan via volumen.
-- Los cambios en archivos del repo se reflejan automaticamente sin `docker compose up --build`.
-- En dev mode Swagger se desactiva para las APIs Nest para evitar conflictos de metadata con el transpile en caliente.
-- Para apagar dev mode: `pnpm docker:dev:down`
+Notes:
+- The first startup installs dependencies inside each container; they are then reused through volumes.
+- File changes in the repo are reflected automatically without `docker compose up --build`.
+- In dev mode, Swagger is disabled for Nest APIs to avoid metadata conflicts with hot transpilation.
+- To stop dev mode: `pnpm docker:dev:down`
 
 ## URLs
 - Web: `http://localhost:3000`
@@ -48,48 +48,48 @@ Notas:
 - svc-beta docs: `http://localhost:3012/docs`
 - svc-gamma docs: `http://localhost:3013/docs`
 
-## Uso
-1. Abrir Dashboard en `http://localhost:3000`.
-2. Crear un run seleccionando workflow, iteraciones, concurrencia, timeout y retry opcional.
-3. Ir al detalle del run para ver stats, call graph, calls y streaming en vivo.
-4. Abrir `Services` y modificar chaos config por servicio.
-5. Abrir `SigKill` para enviar `SIGTERM` a `web`, `orchestrator-api` y `svc-*`.
-6. Ejecutar nuevos runs para comprobar impacto de errores/latencia/timeout/caidas.
+## Usage
+1. Open Dashboard at `http://localhost:3000`.
+2. Create a run by selecting workflow, iterations, concurrency, timeout, and optional retry.
+3. Open run details to inspect stats, call graph, calls, and live streaming.
+4. Open `Services` and modify chaos config per service.
+5. Open `SigKill` to send `SIGTERM` to `web`, `orchestrator-api`, and `svc-*`.
+6. Run new tests to verify the impact of errors/latency/timeouts/outages.
 
 ## Chaos config
-Cada servicio expone:
+Each service exposes:
 - `GET /health`
 - `GET /config/chaos`
 - `POST /config/chaos`
 - `POST /config/chaos/reset`
-- `POST /chaos/terminate` (acepta `signal` y `delayMs`)
+- `POST /chaos/terminate` (accepts `signal` and `delayMs`)
 - `POST /work`
 
-Modos soportados:
+Supported modes:
 - `normal`
 - `forceStatus` (400/500/503)
-- `probabilisticError` (p.ej. `errorProbability=0.2`)
-- `latency` (`fixedLatencyMs` o random min/max)
+- `probabilisticError` (e.g. `errorProbability=0.2`)
+- `latency` (`fixedLatencyMs` or random min/max)
 - `timeout` (`timeoutProbability`)
 
 ## SigKill
-- La tab `SigKill` permite enviar senales de proceso:
-  - `SIGTERM`: terminacion ordenada
-- Endpoints expuestos por orchestrator:
+- The `SigKill` tab lets you send process signals:
+  - `SIGTERM`: graceful termination
+- Endpoints exposed by orchestrator:
   - `GET /services/kill-targets`
   - `POST /services/:name/terminate`
 
-## Correlacion y logs
-Headers propagados:
+## Correlation and logs
+Propagated headers:
 - `X-Request-Id`
 - `X-Run-Id`
 - `X-Call-Id`
 - `X-Parent-Call-Id`
 
-Todos los servicios emiten logs JSON a stdout con campos:
+All services emit JSON logs to stdout with these fields:
 - `timestamp`, `level`, `service`, `requestId`, `runId`, `callId`, `parentCallId`, `route`, `method`, `statusCode`, `durationMs`, `msg`, `errorType`, `errorMessage`
 
-Ejemplo:
+Example:
 ```json
 {
   "timestamp": "2026-02-10T12:00:00.000Z",
@@ -107,7 +107,7 @@ Ejemplo:
 }
 ```
 
-## Scripts principales
+## Main scripts
 - Root:
   - `pnpm build`
   - `pnpm dev`
@@ -125,10 +125,10 @@ Ejemplo:
   - `pnpm --filter web dev`
 
 ## Troubleshooting
-- Error de puertos ocupados:
-  - liberar `3000,3001,3011,3012,3013,5432`.
-- Error Prisma/DB:
-  - verificar `DATABASE_URL` en `.env`.
-  - correr `pnpm prisma:generate`.
-- Servicios no alcanzables:
-  - revisar estado con `docker compose ps` y healthchecks.
+- Port already in use:
+  - free `3000,3001,3011,3012,3013,5432`.
+- Prisma/DB error:
+  - check `DATABASE_URL` in `.env`.
+  - run `pnpm prisma:generate`.
+- Services unreachable:
+  - check status with `docker compose ps` and healthchecks.
