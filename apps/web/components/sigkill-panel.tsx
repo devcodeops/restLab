@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { apiGet, apiPost } from '../lib/api';
+import { useI18n } from '../lib/i18n';
 
 interface KillTarget {
   name: string;
@@ -10,6 +11,7 @@ interface KillTarget {
 }
 
 export function SigkillPanel() {
+  const { t } = useI18n();
   const [targets, setTargets] = useState<KillTarget[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [running, setRunning] = useState<string | null>(null);
@@ -22,7 +24,7 @@ export function SigkillPanel() {
       setTargets(data.items);
       setError(null);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'error loading kill targets');
+      setError(err instanceof Error ? err.message : t('sigkill.errorLoading'));
     }
   }
 
@@ -32,7 +34,7 @@ export function SigkillPanel() {
       await apiPost(`/services/${target.name}/terminate`, { signal: 'SIGTERM', delayMs: 250 });
       await loadTargets();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'error sending signal');
+      setError(err instanceof Error ? err.message : t('sigkill.errorSending'));
     } finally {
       setRunning(null);
     }
@@ -65,12 +67,9 @@ export function SigkillPanel() {
   return (
     <div className="space-y-4" ref={viewRef} tabIndex={-1}>
       <section className="panel space-y-2">
-        <h2 className="text-lg font-semibold">SIGKILL Injection</h2>
-        <p className="text-sm text-slate-700">
-          Usa esta vista para terminar procesos de servicios de forma controlada y observar como se
-          comporta el sistema ante caidas reales.
-        </p>
-        <p className="text-sm text-slate-700">En esta version, la senal soportada es `SIGKILL`.</p>
+        <h2 className="text-lg font-semibold">{t('sigkill.panelTitle')}</h2>
+        <p className="text-sm text-slate-700">{t('sigkill.panel1')}</p>
+        <p className="text-sm text-slate-700">{t('sigkill.panel2')}</p>
       </section>
 
       {error ? <p className="text-sm text-danger">{error}</p> : null}
@@ -84,7 +83,9 @@ export function SigkillPanel() {
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <h3 className="font-semibold">{target.name}</h3>
-                <span className={target.status === 'ok' ? 'badge-ok' : 'badge-err'}>{target.status}</span>
+                <span className={target.status === 'ok' ? 'badge-ok' : 'badge-err'}>
+                  {target.status === 'ok' ? t('common.ok') : t('common.down')}
+                </span>
               </div>
               <p className="text-xs text-muted">{target.url}</p>
             </div>
@@ -94,7 +95,7 @@ export function SigkillPanel() {
               onClick={() => setConfirmTarget(target)}
               disabled={running === target.name}
             >
-              {running === target.name ? 'Enviando...' : 'Enviar SIGKILL'}
+              {running === target.name ? t('sigkill.sending') : t('sigkill.sendCta')}
             </button>
           </article>
         ))}
@@ -110,17 +111,15 @@ export function SigkillPanel() {
           }}
         >
           <div className="w-full max-w-md rounded-xl bg-white p-5 shadow-panel" role="dialog" aria-modal="true">
-            <h3 className="text-lg font-semibold">Confirmar envio de SIGKILL</h3>
+            <h3 className="text-lg font-semibold">{t('sigkill.confirmTitle')}</h3>
             <p className="mt-2 text-sm text-slate-700">
-              Vas a enviar SIGKILL a <span className="font-semibold">{confirmTarget.name}</span>.
-              Esto puede dejar el servicio no disponible.
+              {t('sigkill.confirmBody')} <span className="font-semibold">{confirmTarget.name}</span>.{' '}
+              {t('sigkill.confirmWarn')}
             </p>
-            <p className="mt-1 text-xs text-slate-500">
-              Nota: internamente se envia una terminacion controlada para asegurar apagado del contenedor.
-            </p>
+            <p className="mt-1 text-xs text-slate-500">{t('sigkill.confirmNote')}</p>
             <div className="mt-4 flex justify-end gap-2">
               <button className="button-secondary" type="button" onClick={closeModal}>
-                Cancelar
+                {t('common.cancel')}
               </button>
               <button
                 className="button"
@@ -133,7 +132,7 @@ export function SigkillPanel() {
                   }
                 }}
               >
-                Confirmar
+                {t('common.confirm')}
               </button>
             </div>
           </div>

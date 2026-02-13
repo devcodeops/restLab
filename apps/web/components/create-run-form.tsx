@@ -2,6 +2,7 @@
 
 import { FormEvent, ReactNode, useEffect, useState } from 'react';
 import { apiPost } from '../lib/api';
+import { useI18n } from '../lib/i18n';
 
 interface Props {
   onCreated: (runId: string) => void;
@@ -20,11 +21,13 @@ function FieldHelp({
   onToggle: (id: string) => void;
   children: ReactNode;
 }) {
+  const { t } = useI18n();
+
   return (
     <span className="help-inline">
       <button
         aria-expanded={open}
-        aria-label={`Ayuda sobre ${title}`}
+        aria-label={`${t('common.helpAbout')} ${title}`}
         className="help-icon"
         onClick={() => onToggle(id)}
         type="button"
@@ -69,6 +72,7 @@ function LabelWithHelp({
 }
 
 export function CreateRunForm({ onCreated }: Props) {
+  const { t } = useI18n();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [retryEnabled, setRetryEnabled] = useState(false);
@@ -114,7 +118,7 @@ export function CreateRunForm({ onCreated }: Props) {
       const data = await apiPost<{ runId: string }>('/runs', payload);
       onCreated(data.runId);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'error');
+      setError(err instanceof Error ? err.message : t('dashboard.createdRunError'));
     } finally {
       setLoading(false);
     }
@@ -122,21 +126,21 @@ export function CreateRunForm({ onCreated }: Props) {
 
   return (
     <form onSubmit={onSubmit} className="panel space-y-3">
-      <h2 className="text-lg font-semibold">Crear Run</h2>
+      <h2 className="text-lg font-semibold">{t('dashboard.createRun')}</h2>
       <div className="grid gap-3 md:grid-cols-2">
         <div>
           <LabelWithHelp
             helpId="workflow"
-            label="Workflow"
-            helpTitle="Workflow"
+            label={t('dashboard.workflow')}
+            helpTitle={t('dashboard.workflow')}
             open={openHelpId === 'workflow'}
             onToggle={toggleHelp}
           >
-            <p>Define el patron de llamadas entre servicios en cada iteracion.</p>
-            <p>`chain`: alpha -&gt; beta -&gt; gamma (secuencial).</p>
-            <p>`fanout`: alpha llama beta y gamma en paralelo.</p>
-            <p>`fanout-fanin`: fanout y luego una llamada extra de consolidacion.</p>
-            <p>`random`: mezcla rutas aleatorias para generar ruido realista.</p>
+            <p>{t('dashboard.formHelp.workflow1')}</p>
+            <p>{t('dashboard.formHelp.workflow2')}</p>
+            <p>{t('dashboard.formHelp.workflow3')}</p>
+            <p>{t('dashboard.formHelp.workflow4')}</p>
+            <p>{t('dashboard.formHelp.workflow5')}</p>
           </LabelWithHelp>
           <select className="input" name="workflow" defaultValue="chain">
             <option value="chain">chain</option>
@@ -149,14 +153,14 @@ export function CreateRunForm({ onCreated }: Props) {
         <div>
           <LabelWithHelp
             helpId="iterations"
-            label="Iterations"
-            helpTitle="Iterations"
+            label={t('dashboard.iterations')}
+            helpTitle={t('dashboard.iterations')}
             open={openHelpId === 'iterations'}
             onToggle={toggleHelp}
           >
-            <p>Cantidad de ejecuciones del workflow dentro del mismo run.</p>
-            <p>Ejemplo: `50` ejecuta 50 veces el flujo elegido y acumula estadisticas.</p>
-            <p>Rango valido: 1 a 1000.</p>
+            <p>{t('dashboard.formHelp.iterations1')}</p>
+            <p>{t('dashboard.formHelp.iterations2')}</p>
+            <p>{t('dashboard.formHelp.iterations3')}</p>
           </LabelWithHelp>
           <input className="input" name="iterations" defaultValue={50} type="number" min={1} />
         </div>
@@ -164,14 +168,14 @@ export function CreateRunForm({ onCreated }: Props) {
         <div>
           <LabelWithHelp
             helpId="concurrency"
-            label="Concurrency"
-            helpTitle="Concurrency"
+            label={t('dashboard.concurrency')}
+            helpTitle={t('dashboard.concurrency')}
             open={openHelpId === 'concurrency'}
             onToggle={toggleHelp}
           >
-            <p>Cuantas iteraciones se ejecutan al mismo tiempo.</p>
-            <p>Subir este valor aumenta carga simultanea, latencia y probabilidad de fallos bajo chaos.</p>
-            <p>Rango valido: 1 a 100.</p>
+            <p>{t('dashboard.formHelp.concurrency1')}</p>
+            <p>{t('dashboard.formHelp.concurrency2')}</p>
+            <p>{t('dashboard.formHelp.concurrency3')}</p>
           </LabelWithHelp>
           <input className="input" name="concurrency" defaultValue={5} type="number" min={1} />
         </div>
@@ -179,14 +183,14 @@ export function CreateRunForm({ onCreated }: Props) {
         <div>
           <LabelWithHelp
             helpId="payload-size"
-            label="Payload size"
-            helpTitle="Payload size"
+            label={t('dashboard.payloadSize')}
+            helpTitle={t('dashboard.payloadSize')}
             open={openHelpId === 'payload-size'}
             onToggle={toggleHelp}
           >
-            <p>Tamano de payload enviado en cada llamada de trabajo (bytes aprox).</p>
-            <p>Sirve para simular peticiones livianas o pesadas y ver impacto en tiempos.</p>
-            <p>Opcional. Si esta vacio, se usa payload pequeno por defecto.</p>
+            <p>{t('dashboard.formHelp.payload1')}</p>
+            <p>{t('dashboard.formHelp.payload2')}</p>
+            <p>{t('dashboard.formHelp.payload3')}</p>
           </LabelWithHelp>
           <input className="input" name="payloadSize" defaultValue={256} type="number" min={0} />
         </div>
@@ -194,14 +198,14 @@ export function CreateRunForm({ onCreated }: Props) {
         <div>
           <LabelWithHelp
             helpId="client-timeout"
-            label="Client timeout (ms)"
-            helpTitle="Client timeout"
+            label={t('dashboard.clientTimeout')}
+            helpTitle={t('dashboard.clientTimeout')}
             open={openHelpId === 'client-timeout'}
             onToggle={toggleHelp}
           >
-            <p>Tiempo maximo que espera cada hop HTTP antes de marcar timeout.</p>
-            <p>Si un servicio tarda mas que este valor, esa llamada se registra como `timeout`.</p>
-            <p>Afecta especialmente cuando activas modo chaos `timeout` o latencias altas.</p>
+            <p>{t('dashboard.formHelp.timeout1')}</p>
+            <p>{t('dashboard.formHelp.timeout2')}</p>
+            <p>{t('dashboard.formHelp.timeout3')}</p>
           </LabelWithHelp>
           <input className="input" name="clientTimeoutMs" defaultValue={2000} type="number" min={100} />
         </div>
@@ -210,17 +214,17 @@ export function CreateRunForm({ onCreated }: Props) {
       <div className="flex items-center gap-2 text-sm">
         <input type="checkbox" checked={retryEnabled} onChange={(e) => setRetryEnabled(e.target.checked)} />
         <span className="flex items-center gap-2">
-          Habilitar retry policy
+          {t('dashboard.enableRetryPolicy')}
           <FieldHelp
             id="retry-policy"
             title="Retry policy"
             open={openHelpId === 'retry-policy'}
             onToggle={toggleHelp}
           >
-            <p>Reintenta llamadas fallidas antes de darlas por error.</p>
-            <p>En esta version aplica al hop `orchestrator -&gt; svc-alpha`.</p>
-            <p>`Retries` = intentos extra. `Backoff ms` = espera entre intentos.</p>
-            <p>Util para reducir fallos transitorios, pero aumenta duracion total del run.</p>
+            <p>{t('dashboard.formHelp.retry1')}</p>
+            <p>{t('dashboard.formHelp.retry2')}</p>
+            <p>{t('dashboard.formHelp.retry3')}</p>
+            <p>{t('dashboard.formHelp.retry4')}</p>
           </FieldHelp>
         </span>
       </div>
@@ -230,28 +234,28 @@ export function CreateRunForm({ onCreated }: Props) {
           <div>
             <LabelWithHelp
               helpId="retries"
-              label="Retries"
-              helpTitle="Retries"
+              label={t('dashboard.retries')}
+              helpTitle={t('dashboard.retries')}
               open={openHelpId === 'retries'}
               onToggle={toggleHelp}
             >
-              <p>Numero de reintentos despues del intento inicial.</p>
-              <p>Ejemplo: `2` significa hasta 3 intentos totales.</p>
-              <p>Rango valido: 0 a 5.</p>
+              <p>{t('dashboard.formHelp.retries1')}</p>
+              <p>{t('dashboard.formHelp.retries2')}</p>
+              <p>{t('dashboard.formHelp.retries3')}</p>
             </LabelWithHelp>
             <input className="input" name="retries" defaultValue={1} type="number" min={0} />
           </div>
           <div>
             <LabelWithHelp
               helpId="backoff-ms"
-              label="Backoff ms"
-              helpTitle="Backoff ms"
+              label={t('dashboard.backoffMs')}
+              helpTitle={t('dashboard.backoffMs')}
               open={openHelpId === 'backoff-ms'}
               onToggle={toggleHelp}
             >
-              <p>Espera entre reintentos para evitar saturar servicios.</p>
-              <p>Ejemplo: `200` agrega 200ms entre cada intento fallido.</p>
-              <p>Rango valido: 0 a 5000.</p>
+              <p>{t('dashboard.formHelp.backoff1')}</p>
+              <p>{t('dashboard.formHelp.backoff2')}</p>
+              <p>{t('dashboard.formHelp.backoff3')}</p>
             </LabelWithHelp>
             <input className="input" name="backoffMs" defaultValue={200} type="number" min={0} />
           </div>
@@ -259,7 +263,7 @@ export function CreateRunForm({ onCreated }: Props) {
       ) : null}
 
       <button className="button" disabled={loading} type="submit">
-        {loading ? 'Starting...' : 'Start Run'}
+        {loading ? t('dashboard.starting') : t('dashboard.startRun')}
       </button>
       {error ? <p className="text-sm text-danger">{error}</p> : null}
     </form>

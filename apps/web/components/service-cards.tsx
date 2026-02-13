@@ -2,6 +2,7 @@
 
 import { FormEvent, ReactNode, useEffect, useRef, useState } from 'react';
 import { apiGet, apiPost } from '../lib/api';
+import { useI18n } from '../lib/i18n';
 
 interface ServiceInfo {
   name: string;
@@ -33,11 +34,13 @@ function FieldHelp({
   onToggle: (id: string) => void;
   children: ReactNode;
 }) {
+  const { t } = useI18n();
+
   return (
     <span className="help-inline">
       <button
         aria-expanded={open}
-        aria-label={`Ayuda sobre ${title}`}
+        aria-label={`${t('common.helpAbout')} ${title}`}
         className="help-icon"
         onClick={() => onToggle(id)}
         type="button"
@@ -82,6 +85,7 @@ function LabelWithHelp({
 }
 
 export function ServiceCards() {
+  const { t } = useI18n();
   const [services, setServices] = useState<ServiceInfo[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [openHelpId, setOpenHelpId] = useState<string | null>(null);
@@ -110,7 +114,7 @@ export function ServiceCards() {
       });
       setError(null);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'error loading services');
+      setError(err instanceof Error ? err.message : t('services.errorLoading'));
     }
   }
 
@@ -159,7 +163,7 @@ export function ServiceCards() {
       setDirtyModes((prev) => ({ ...prev, [serviceName]: false }));
       await load();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'error updating chaos');
+      setError(err instanceof Error ? err.message : t('services.errorUpdating'));
     }
   }
 
@@ -170,7 +174,7 @@ export function ServiceCards() {
       setSelectedModes((prev) => ({ ...prev, [serviceName]: 'normal' }));
       await load();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'error resetting chaos');
+      setError(err instanceof Error ? err.message : t('services.errorResetting'));
     }
   }
 
@@ -178,15 +182,9 @@ export function ServiceCards() {
     <div className="space-y-4">
       {error ? <p className="text-sm text-danger">{error}</p> : null}
       <section className="panel space-y-2">
-        <h3 className="text-base font-semibold">Que hace Chaos Mode</h3>
-        <p className="text-sm text-slate-700">
-          Esta seccion te permite inyectar fallos controlados en cada microservicio para validar
-          resiliencia, timeouts, retries y comportamiento del sistema bajo carga.
-        </p>
-        <p className="text-sm text-slate-700">
-          Recomendacion operativa: cambia un parametro a la vez, lanza un run y revisa impacto en
-          status codes, latencias y errores del call graph.
-        </p>
+        <h3 className="text-base font-semibold">{t('services.introTitle')}</h3>
+        <p className="text-sm text-slate-700">{t('services.intro1')}</p>
+        <p className="text-sm text-slate-700">{t('services.intro2')}</p>
       </section>
       <div className="grid auto-rows-fr items-stretch gap-4 md:grid-cols-2 xl:grid-cols-3">
         {services.map((svc) => {
@@ -197,19 +195,16 @@ export function ServiceCards() {
               <h3 className="font-semibold">{svc.name}</h3>
               <span className="flex items-center gap-2">
                 <span className={svc.health?.status === 'ok' ? 'badge-ok' : 'badge-err'}>
-                  {svc.health?.status ?? 'down'}
+                  {svc.health?.status === 'ok' ? t('common.ok') : t('common.down')}
                 </span>
                 <FieldHelp
                   id={`health-${svc.name}`}
-                  title={`Estado del servicio ${svc.name}`}
+                  title={`${t('services.healthTitle')} ${svc.name}`}
                   open={openHelpId === `health-${svc.name}`}
                   onToggle={toggleHelp}
                 >
-                  <p>`ok` indica que responde `GET /health`.</p>
-                  <p>
-                    Si aparece `down`, el orchestrator no puede contactar este servicio y los runs
-                    se veran afectados.
-                  </p>
+                  <p>{t('services.health1')}</p>
+                  <p>{t('services.health2')}</p>
                 </FieldHelp>
               </span>
             </header>
@@ -217,12 +212,12 @@ export function ServiceCards() {
               {svc.url}
               <FieldHelp
                 id={`url-${svc.name}`}
-                title={`URL de ${svc.name}`}
+                title={`${t('services.urlTitle')} ${svc.name}`}
                 open={openHelpId === `url-${svc.name}`}
                 onToggle={toggleHelp}
               >
-                <p>Endpoint interno usado por orchestrator para llamar al servicio.</p>
-                <p>No es necesario editarlo desde esta pantalla.</p>
+                <p>{t('services.url1')}</p>
+                <p>{t('services.url2')}</p>
               </FieldHelp>
             </p>
 
@@ -231,17 +226,17 @@ export function ServiceCards() {
                 <div>
                 <LabelWithHelp
                   helpId={`mode-${svc.name}`}
-                  label="Mode"
-                  helpTitle="Mode"
+                  label={t('services.mode')}
+                  helpTitle={t('services.mode')}
                   open={openHelpId === `mode-${svc.name}`}
                   onToggle={toggleHelp}
                 >
-                  <p>Define el tipo de comportamiento inyectado para este servicio.</p>
-                  <p>`normal`: respuesta saludable.</p>
-                  <p>`forceStatus`: siempre devuelve un status de error elegido.</p>
-                  <p>`probabilisticError`: falla con probabilidad `p`.</p>
-                  <p>`latency`: agrega retraso artificial.</p>
-                  <p>`timeout`: simula cuelgues para provocar timeout del cliente.</p>
+                  <p>{t('services.mode1')}</p>
+                  <p>{t('services.mode2')}</p>
+                  <p>{t('services.mode3')}</p>
+                  <p>{t('services.mode4')}</p>
+                  <p>{t('services.mode5')}</p>
+                  <p>{t('services.mode6')}</p>
                 </LabelWithHelp>
                 <select
                   className="input"
@@ -275,9 +270,9 @@ export function ServiceCards() {
                   open={openHelpId === `force-status-${svc.name}`}
                   onToggle={toggleHelp}
                 >
-                  <p>Codigo HTTP que el servicio devolvera cuando `mode=forceStatus`.</p>
-                  <p>Usos comunes: `400` (cliente), `500` (error interno), `503` (no disponible).</p>
-                  <p>Rango valido: 400 a 599.</p>
+                  <p>{t('services.forceStatus1')}</p>
+                  <p>{t('services.forceStatus2')}</p>
+                  <p>{t('services.forceStatus3')}</p>
                 </LabelWithHelp>
                 <input
                   className="input"
@@ -297,9 +292,9 @@ export function ServiceCards() {
                   open={openHelpId === `error-prob-${svc.name}`}
                   onToggle={toggleHelp}
                 >
-                  <p>Probabilidad de fallo cuando `mode=probabilisticError`.</p>
-                  <p>Valor de `0` a `1`.</p>
-                  <p>Ejemplo: `0.2` implica aprox 20% de respuestas 500.</p>
+                  <p>{t('services.errorProb1')}</p>
+                  <p>{t('services.errorProb2')}</p>
+                  <p>{t('services.errorProb3')}</p>
                 </LabelWithHelp>
                 <input
                   className="input"
@@ -319,8 +314,8 @@ export function ServiceCards() {
                   open={openHelpId === `fixed-latency-${svc.name}`}
                   onToggle={toggleHelp}
                 >
-                  <p>Latencia fija en milisegundos agregada antes de responder.</p>
-                  <p>Aplica para simular servicios lentos de forma constante.</p>
+                  <p>{t('services.fixedLatency1')}</p>
+                  <p>{t('services.fixedLatency2')}</p>
                 </LabelWithHelp>
                 <input
                   className="input"
@@ -340,8 +335,8 @@ export function ServiceCards() {
                   open={openHelpId === `random-latency-min-${svc.name}`}
                   onToggle={toggleHelp}
                 >
-                  <p>Minimo de latencia aleatoria cuando defines un rango random.</p>
-                  <p>Usar junto con `randomLatencyMaxMs`.</p>
+                  <p>{t('services.randomMin1')}</p>
+                  <p>{t('services.randomMin2')}</p>
                 </LabelWithHelp>
                 <input
                   className="input"
@@ -361,8 +356,8 @@ export function ServiceCards() {
                   open={openHelpId === `random-latency-max-${svc.name}`}
                   onToggle={toggleHelp}
                 >
-                  <p>Maximo de latencia aleatoria cuando defines un rango random.</p>
-                  <p>Debe ser mayor o igual que `randomLatencyMinMs`.</p>
+                  <p>{t('services.randomMax1')}</p>
+                  <p>{t('services.randomMax2')}</p>
                 </LabelWithHelp>
                 <input
                   className="input"
@@ -382,9 +377,9 @@ export function ServiceCards() {
                   open={openHelpId === `timeout-prob-${svc.name}`}
                   onToggle={toggleHelp}
                 >
-                  <p>Probabilidad de simular timeout cuando `mode=timeout`.</p>
-                  <p>Valor de `0` a `1`.</p>
-                  <p>Ejemplo: `1` hace que siempre se exceda el timeout del cliente.</p>
+                  <p>{t('services.timeoutProb1')}</p>
+                  <p>{t('services.timeoutProb2')}</p>
+                  <p>{t('services.timeoutProb3')}</p>
                 </LabelWithHelp>
                 <input
                   className="input"
@@ -398,19 +393,19 @@ export function ServiceCards() {
 
               <div className="mt-auto flex gap-2 pt-2">
                 <button type="submit" className="button">
-                  Aplicar
+                  {t('common.apply')}
                 </button>
                 <button type="button" className="button-secondary" onClick={() => reset(svc.name)}>
-                  Reset normal
+                  {t('common.resetNormal')}
                 </button>
                 <FieldHelp
                   id={`reset-${svc.name}`}
-                  title="Reset normal"
+                  title={t('services.resetTitle')}
                   open={openHelpId === `reset-${svc.name}`}
                   onToggle={toggleHelp}
                 >
-                  <p>Restaura la configuracion del servicio a `mode=normal`.</p>
-                  <p>Util cuando terminas pruebas de caos y quieres volver a baseline.</p>
+                  <p>{t('services.reset1')}</p>
+                  <p>{t('services.reset2')}</p>
                 </FieldHelp>
               </div>
             </form>

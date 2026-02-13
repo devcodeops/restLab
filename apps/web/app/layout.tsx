@@ -1,10 +1,10 @@
 import './globals.css';
-import Link from 'next/link';
 import type { Metadata } from 'next';
-import { ThemeToggle } from '../components/theme-toggle';
+import { AppHeader } from '../components/app-header';
+import { AppProviders } from './providers';
 
 export const metadata: Metadata = {
-  title: 'REST Lab Control Center',
+  title: 'RestLab Control Center',
   description: 'Microservices traffic lab',
 };
 
@@ -35,26 +35,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
       </head>
       <body>
-        <div className="mx-auto min-h-screen max-w-6xl p-4 md:p-8">
-          <header className="mb-6 flex items-center justify-between">
-            <h1 className="text-2xl font-semibold">REST Lab | Centro de Control</h1>
-            <div className="flex items-center gap-3">
-              <nav className="flex gap-3 text-sm">
-                <Link href="/" className="underline-offset-2 hover:underline">
-                  Dashboard
-                </Link>
-                <Link href="/services" className="underline-offset-2 hover:underline">
-                  Servicios
-                </Link>
-                <Link href="/sigkill" className="underline-offset-2 hover:underline">
-                  SigKill
-                </Link>
-              </nav>
-              <ThemeToggle />
-            </div>
-          </header>
-          {children}
-        </div>
+        <AppProviders>
+          <div className="mx-auto min-h-screen max-w-6xl p-4 md:p-8">
+            <AppHeader />
+            {children}
+          </div>
+        </AppProviders>
       </body>
     </html>
   );
