@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { apiGet, getSseUrl } from '../lib/api';
+import { useI18n } from '../lib/i18n';
 
 interface CallNode {
   id: string;
@@ -34,6 +35,7 @@ interface RunDetail {
 }
 
 function Tree({ nodes, level = 0 }: { nodes: CallNode[]; level?: number }) {
+  const { t } = useI18n();
   return (
     <div className="space-y-1">
       {nodes.map((node) => (
@@ -54,6 +56,7 @@ function Tree({ nodes, level = 0 }: { nodes: CallNode[]; level?: number }) {
 }
 
 export function RunDetailView({ runId }: { runId: string }) {
+  const { t } = useI18n();
   const [data, setData] = useState<RunDetail | null>(null);
   const [statusFilter, setStatusFilter] = useState<'all' | 'ok' | 'error'>('all');
   const [serviceFilter, setServiceFilter] = useState('all');
@@ -66,7 +69,7 @@ export function RunDetailView({ runId }: { runId: string }) {
       setData(detail);
       setError(null);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'error loading run');
+      setError(err instanceof Error ? err.message : t('runs.errorLoadingRun'));
     }
   }
 
@@ -105,7 +108,7 @@ export function RunDetailView({ runId }: { runId: string }) {
   }, [data]);
 
   if (!data) {
-    return <p className="text-sm text-muted">Cargando run...</p>;
+    return <p className="text-sm text-muted">{t('runs.loadingRun')}</p>;
   }
 
   return (
@@ -113,22 +116,22 @@ export function RunDetailView({ runId }: { runId: string }) {
       {error ? <p className="text-sm text-danger">{error}</p> : null}
       <section className="panel grid gap-3 md:grid-cols-4">
         <div>
-          <p className="text-xs text-muted">Workflow</p>
+          <p className="text-xs text-muted">{t('common.workflow')}</p>
           <p className="font-medium">{data.run.workflowName}</p>
         </div>
         <div>
-          <p className="text-xs text-muted">Estado</p>
+          <p className="text-xs text-muted">{t('runs.state')}</p>
           <p className="font-medium">{data.run.status}</p>
         </div>
         <div>
-          <p className="text-xs text-muted">Calls</p>
+          <p className="text-xs text-muted">{t('runs.calls')}</p>
           <p className="font-medium">
-            {data.run.totalCalls} ({data.run.successCalls} ok / {data.run.errorCalls} err / {data.run.timeoutCalls}{' '}
-            timeout)
+            {data.run.totalCalls} ({data.run.successCalls} {t('common.ok')} / {data.run.errorCalls} {t('common.errors')} /{' '}
+            {data.run.timeoutCalls} {t('common.timeout')})
           </p>
         </div>
         <div>
-          <p className="text-xs text-muted">Latencias</p>
+          <p className="text-xs text-muted">{t('runs.latencies')}</p>
           <p className="font-medium">
             p50: {data.run.p50LatencyMs ?? '-'} ms | p95: {data.run.p95LatencyMs ?? '-'} ms
           </p>
@@ -141,7 +144,7 @@ export function RunDetailView({ runId }: { runId: string }) {
           className="accordion-trigger flex h-14 w-full items-center justify-between px-4 text-left"
           onClick={() => setOpenSection((current) => (current === 'graph' ? null : 'graph'))}
         >
-          <h2 className="text-lg font-semibold">Call Graph</h2>
+          <h2 className="text-lg font-semibold">{t('runs.callGraph')}</h2>
           <span className="text-sm text-muted">{openSection === 'graph' ? '▲' : '▼'}</span>
         </button>
         <div className={`accordion-content ${openSection === 'graph' ? 'open' : ''}`}>
@@ -159,7 +162,7 @@ export function RunDetailView({ runId }: { runId: string }) {
           className="accordion-trigger flex h-14 w-full items-center justify-between px-4 text-left"
           onClick={() => setOpenSection((current) => (current === 'calls' ? null : 'calls'))}
         >
-          <h2 className="text-lg font-semibold">Calls</h2>
+          <h2 className="text-lg font-semibold">{t('runs.callsTable')}</h2>
           <span className="text-sm text-muted">{openSection === 'calls' ? '▲' : '▼'}</span>
         </button>
         <div className={`accordion-content ${openSection === 'calls' ? 'open' : ''}`}>
@@ -167,17 +170,17 @@ export function RunDetailView({ runId }: { runId: string }) {
             <div className="space-y-3 px-4 pb-4 pt-1">
             <div className="grid gap-3 md:grid-cols-3">
               <label>
-                <span className="mb-1 block text-xs text-muted">Status</span>
+                <span className="mb-1 block text-xs text-muted">{t('common.status')}</span>
                 <select className="input" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value as never)}>
-                  <option value="all">all</option>
-                  <option value="ok">ok</option>
-                  <option value="error">error</option>
+                  <option value="all">{t('common.all')}</option>
+                  <option value="ok">{t('common.ok')}</option>
+                  <option value="error">{t('common.error')}</option>
                 </select>
               </label>
               <label>
-                <span className="mb-1 block text-xs text-muted">Service</span>
+                <span className="mb-1 block text-xs text-muted">{t('common.service')}</span>
                 <select className="input" value={serviceFilter} onChange={(e) => setServiceFilter(e.target.value)}>
-                  <option value="all">all</option>
+                  <option value="all">{t('common.all')}</option>
                   {services.map((svc) => (
                     <option key={svc} value={svc}>
                       {svc}
@@ -191,12 +194,12 @@ export function RunDetailView({ runId }: { runId: string }) {
               <table className="min-w-full text-sm">
                 <thead className="text-left text-muted">
                   <tr>
-                    <th className="py-2">From</th>
-                    <th>To</th>
-                    <th>Status</th>
-                    <th>Duration</th>
-                    <th>ErrorType</th>
-                    <th>ErrorMessage</th>
+                    <th className="py-2">{t('runs.from')}</th>
+                    <th>{t('runs.to')}</th>
+                    <th>{t('common.status')}</th>
+                    <th>{t('common.duration')}</th>
+                    <th>{t('runs.errorType')}</th>
+                    <th>{t('runs.errorMessage')}</th>
                   </tr>
                 </thead>
                 <tbody>

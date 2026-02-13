@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { useI18n } from '../lib/i18n';
 
 type Theme = 'light' | 'dark';
 
@@ -22,6 +23,7 @@ function readInitialTheme(): Theme {
 }
 
 export function ThemeToggle() {
+  const { t } = useI18n();
   const [theme, setTheme] = useState<Theme>('light');
   const [mounted, setMounted] = useState(false);
   const transitionTimerRef = useRef<number | null>(null);
@@ -62,8 +64,8 @@ export function ThemeToggle() {
       type="button"
       className="theme-toggle"
       onClick={toggleTheme}
-      aria-label={`Cambiar a modo ${theme === 'light' ? 'oscuro' : 'claro'}`}
-      title={`Cambiar a modo ${theme === 'light' ? 'oscuro' : 'claro'}`}
+      aria-label={theme === 'light' ? t('theme.toDark') : t('theme.toLight')}
+      title={theme === 'light' ? t('theme.toDark') : t('theme.toLight')}
       disabled={!mounted}
     >
       <span className={`theme-toggle-track ${theme === 'dark' ? 'is-dark' : ''}`}>

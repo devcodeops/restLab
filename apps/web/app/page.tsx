@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { CreateRunForm } from '../components/create-run-form';
 import { RunsTable } from '../components/runs-table';
 import { apiGet, apiPost, getSseUrl } from '../lib/api';
+import { useI18n } from '../lib/i18n';
 
 interface RunsResponse {
   items: Array<{
@@ -19,6 +20,7 @@ interface RunsResponse {
 }
 
 export default function HomePage() {
+  const { t } = useI18n();
   const [runs, setRuns] = useState<RunsResponse['items']>([]);
   const [error, setError] = useState<string | null>(null);
   const [clearing, setClearing] = useState(false);
@@ -34,7 +36,7 @@ export default function HomePage() {
       setRuns(data.items);
       setError(null);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'error loading runs');
+      setError(err instanceof Error ? err.message : t('dashboard.errorLoadingRuns'));
     } finally {
       isFetchingRef.current = false;
     }
@@ -77,7 +79,7 @@ export default function HomePage() {
       setError(null);
       await loadRuns();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'error clearing runs');
+      setError(err instanceof Error ? err.message : t('dashboard.errorClearingRuns'));
     } finally {
       setClearing(false);
     }
@@ -117,14 +119,12 @@ export default function HomePage() {
           }}
         >
           <div className="w-full max-w-md rounded-xl bg-white p-5 shadow-panel" role="dialog" aria-modal="true">
-            <h3 className="text-lg font-semibold">Confirmar limpieza de logs</h3>
-            <p className="mt-2 text-sm text-slate-700">
-              Vas a eliminar todos los runs y calls almacenados en el historial.
-            </p>
-            <p className="mt-1 text-xs text-slate-500">Esta accion no se puede deshacer.</p>
+            <h3 className="text-lg font-semibold">{t('dashboard.clearLogsTitle')}</h3>
+            <p className="mt-2 text-sm text-slate-700">{t('dashboard.clearLogsBody')}</p>
+            <p className="mt-1 text-xs text-slate-500">{t('dashboard.clearLogsIrreversible')}</p>
             <div className="mt-4 flex justify-end gap-2">
               <button className="button-secondary" type="button" onClick={closeClearModal}>
-                Cancelar
+                {t('common.cancel')}
               </button>
               <button
                 className="button"
@@ -135,7 +135,7 @@ export default function HomePage() {
                   await clearRuns();
                 }}
               >
-                {clearing ? 'Limpiando...' : 'Confirmar'}
+                {clearing ? t('dashboard.clearing') : t('dashboard.clearConfirmCta')}
               </button>
             </div>
           </div>
