@@ -5,4 +5,3 @@ node_modules
 **/.next
 dist
 **/dist
-pnpm-lock.yaml

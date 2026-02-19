@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { CreateRunForm } from '../components/create-run-form';
 import { RunsTable } from '../components/runs-table';
 import { apiGet, apiPost, getSseUrl } from '../lib/api';
@@ -28,7 +28,7 @@ export default function HomePage() {
   const isFetchingRef = useRef(false);
   const mainRef = useRef<HTMLElement>(null);
 
-  async function loadRuns() {
+  const loadRuns = useCallback(async () => {
     if (isFetchingRef.current) return;
     isFetchingRef.current = true;
     try {
@@ -40,7 +40,7 @@ export default function HomePage() {
     } finally {
       isFetchingRef.current = false;
     }
-  }
+  }, [t]);
 
   useEffect(() => {
     loadRuns();
@@ -69,9 +69,9 @@ export default function HomePage() {
       document.removeEventListener('visibilitychange', onVisibility);
       window.removeEventListener('focus', onVisibility);
     };
-  }, []);
+  }, [loadRuns]);
 
-  async function clearRuns() {
+  const clearRuns = useCallback(async () => {
     setClearing(true);
     try {
       await apiPost('/runs/clear');
@@ -83,14 +83,14 @@ export default function HomePage() {
     } finally {
       setClearing(false);
     }
-  }
+  }, [loadRuns, t]);
 
-  function closeClearModal() {
+  const closeClearModal = useCallback(() => {
     setShowClearConfirm(false);
     if (mainRef.current) {
       mainRef.current.focus();
     }
-  }
+  }, []);
 
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
@@ -101,11 +101,11 @@ export default function HomePage() {
 
     document.addEventListener('keydown', onKeyDown);
     return () => document.removeEventListener('keydown', onKeyDown);
-  }, [showClearConfirm]);
+  }, [closeClearModal, showClearConfirm]);
 
   return (
     <main className="space-y-6" ref={mainRef} tabIndex={-1}>
-      <CreateRunForm onCreated={() => loadRuns()} />
+      <CreateRunForm onCreated={loadRuns} />
       {error ? <p className="text-sm text-danger">{error}</p> : null}
       <RunsTable runs={runs} onClear={() => setShowClearConfirm(true)} clearing={clearing} />
 

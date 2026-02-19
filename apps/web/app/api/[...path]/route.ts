@@ -58,14 +58,16 @@ async function proxy(request: NextRequest, path: string[], method: 'GET' | 'POST
 
 export async function GET(
   request: NextRequest,
-  context: { params: { path: string[] } },
+  context: { params: Promise<{ path?: string[] }> },
 ): Promise<Response> {
-  return proxy(request, context.params.path, 'GET');
+  const { path = [] } = await context.params;
+  return proxy(request, path, 'GET');
 }
 
 export async function POST(
   request: NextRequest,
-  context: { params: { path: string[] } },
+  context: { params: Promise<{ path?: string[] }> },
 ): Promise<Response> {
-  return proxy(request, context.params.path, 'POST');
+  const { path = [] } = await context.params;
+  return proxy(request, path, 'POST');
 }

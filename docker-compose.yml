@@ -21,6 +21,7 @@ services:
     build:
       context: .
       dockerfile: apps/svc-alpha/Dockerfile
+      target: prod
     environment:
       SVC_ALPHA_PORT: 3011
       SVC_BETA_URL: http://svc-beta:3012
@@ -42,6 +43,7 @@ services:
     build:
       context: .
       dockerfile: apps/svc-beta/Dockerfile
+      target: prod
     environment:
       SVC_BETA_PORT: 3012
     ports:
@@ -56,6 +58,7 @@ services:
     build:
       context: .
       dockerfile: apps/svc-gamma/Dockerfile
+      target: prod
     environment:
       SVC_GAMMA_PORT: 3013
     ports:
@@ -70,6 +73,7 @@ services:
     build:
       context: .
       dockerfile: apps/orchestrator-api/Dockerfile
+      target: prod
     environment:
       DATABASE_URL: ${DATABASE_URL:-postgresql://postgres:postgres@postgres:5432/restlab?schema=public}
       ORCHESTRATOR_PORT: 3001
@@ -95,6 +99,7 @@ services:
     build:
       context: .
       dockerfile: apps/web/Dockerfile
+      target: prod
     environment:
       ORCHESTRATOR_INTERNAL_URL: ${ORCHESTRATOR_INTERNAL_URL:-http://orchestrator-api:3001}
     ports:

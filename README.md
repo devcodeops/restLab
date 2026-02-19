@@ -21,13 +21,14 @@ A local Node/TypeScript microservices lab to generate traffic (ok, errors, laten
 ## Quick start
 1. `cd restLab`
 2. `pnpm install`
-3. `docker compose up --build`
+3. `pnpm docker:up:build`
 
 ## Dev mode (hot reload)
 For development without rebuilding images on every change, use the dev compose override:
 
 1. `cd restLab`
-2. `pnpm docker:dev`
+2. `pnpm docker:dev:build` (first run)
+3. Next runs: `pnpm docker:dev` (without rebuild)
 
 This starts:
 - Next.js in `dev` mode (frontend hot reload)
@@ -35,9 +36,16 @@ This starts:
 - Postgres in the same stack
 
 Notes:
-- The first startup installs dependencies inside each container; they are then reused through volumes.
+- Use `pnpm docker:dev` for iterative development; it avoids image rebuilds.
+- Use `pnpm docker:dev:build` only when Dockerfiles, lockfile, or dependencies change.
+- Dockerfiles are optimized for layer caching: dependency install runs from package manifests before app source copy.
 - File changes in the repo are reflected automatically without `docker compose up --build`.
 - In dev mode, Swagger is disabled for Nest APIs to avoid metadata conflicts with hot transpilation.
+- Each app now has a single multi-stage Dockerfile with two targets:
+  - `prod`: frozen lockfile + build output for runtime
+  - `dev`: non-frozen lockfile + development runtime
+- `docker-compose.yml` builds `target: prod`.
+- `docker-compose.dev.yml` overrides build to `target: dev`.
 - To stop dev mode: `pnpm docker:dev:down`
 
 ## URLs
@@ -109,26 +117,59 @@ Example:
 
 ## Main scripts
 - Root:
-  - `pnpm build`
-  - `pnpm dev`
   - `pnpm docker:up`
+  - `pnpm docker:up:build`
+  - `pnpm docker:down`
   - `pnpm docker:dev`
+  - `pnpm docker:dev:build`
   - `pnpm docker:dev:down`
-  - `pnpm prisma:generate`
   - `pnpm prisma:deploy`
-  - `pnpm prisma:seed`
-- Apps:
-  - `pnpm --filter orchestrator-api dev`
-  - `pnpm --filter svc-alpha dev`
-  - `pnpm --filter svc-beta dev`
-  - `pnpm --filter svc-gamma dev`
-  - `pnpm --filter web dev`
+- Service folders:
+  - execute CI/testing/lint/typecheck from each app directory (`apps/web`, `apps/orchestrator-api`, `apps/svc-alpha`, `apps/svc-beta`, `apps/svc-gamma`).
+
+## Service-level CI/CD
+Each app can now run tests from its own directory, enabling isolated pipelines:
+
+- `apps/web`
+  - `pnpm lint`
+  - `pnpm typecheck`
+  - `pnpm test`
+  - `pnpm test:coverage`
+  - `pnpm ci` (`lint + typecheck + coverage + build`)
+- `apps/orchestrator-api`
+  - `pnpm typecheck`
+  - `pnpm test`
+  - `pnpm test:coverage`
+  - `pnpm ci` (`typecheck + coverage + build`)
+- `apps/svc-alpha`
+  - `pnpm typecheck`
+  - `pnpm test`
+  - `pnpm test:coverage`
+  - `pnpm ci` (`typecheck + coverage + build`)
+- `apps/svc-beta`
+  - `pnpm typecheck`
+  - `pnpm test`
+  - `pnpm test:coverage`
+  - `pnpm ci` (`typecheck + coverage + build`)
+- `apps/svc-gamma`
+  - `pnpm typecheck`
+  - `pnpm test`
+  - `pnpm test:coverage`
+  - `pnpm ci` (`typecheck + coverage + build`)
+
+Pipeline example (per service):
+1. `cd apps/<service-name>`
+2. `pnpm install --frozen-lockfile`
+3. `pnpm ci`
 
 ## Troubleshooting
 - Port already in use:
   - free `3000,3001,3011,3012,3013,5432`.
 - Prisma/DB error:
   - check `DATABASE_URL` in `.env`.
-  - run `pnpm prisma:generate`.
+  - run `pnpm prisma:deploy`.
 - Services unreachable:
   - check status with `docker compose ps` and healthchecks.
+- Registry/network timeouts while building:
+  - rerun with `pnpm docker:dev:build` (Dockerfile retries and cache are enabled).
+  - if your network is unstable, avoid repeated rebuilds and use `pnpm docker:dev` for normal edit-run cycles.

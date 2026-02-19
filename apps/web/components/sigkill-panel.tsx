@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { apiGet, apiPost } from '../lib/api';
 import { useI18n } from '../lib/i18n';
 
@@ -18,7 +18,7 @@ export function SigkillPanel() {
   const [confirmTarget, setConfirmTarget] = useState<KillTarget | null>(null);
   const viewRef = useRef<HTMLDivElement>(null);
 
-  async function loadTargets() {
+  const loadTargets = useCallback(async () => {
     try {
       const data = await apiGet<{ items: KillTarget[] }>('/services/kill-targets');
       setTargets(data.items);
@@ -26,7 +26,7 @@ export function SigkillPanel() {
     } catch (err) {
       setError(err instanceof Error ? err.message : t('sigkill.errorLoading'));
     }
-  }
+  }, [t]);
 
   async function kill(target: KillTarget) {
     try {
@@ -51,7 +51,7 @@ export function SigkillPanel() {
     loadTargets();
     const timer = setInterval(loadTargets, 3000);
     return () => clearInterval(timer);
-  }, []);
+  }, [loadTargets]);
 
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {

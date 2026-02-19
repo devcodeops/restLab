@@ -1,6 +1,6 @@
 'use client';
 
-import { FormEvent, ReactNode, useEffect, useRef, useState } from 'react';
+import { FormEvent, ReactNode, useCallback, useEffect, useRef, useState } from 'react';
 import { apiGet, apiPost } from '../lib/api';
 import { useI18n } from '../lib/i18n';
 
@@ -97,7 +97,7 @@ export function ServiceCards() {
     dirtyModesRef.current = dirtyModes;
   }, [dirtyModes]);
 
-  async function load() {
+  const load = useCallback(async () => {
     try {
       const data = await apiGet<{ services: ServiceInfo[] }>('/services');
       setServices(data.services);
@@ -116,13 +116,13 @@ export function ServiceCards() {
     } catch (err) {
       setError(err instanceof Error ? err.message : t('services.errorLoading'));
     }
-  }
+  }, [t]);
 
   useEffect(() => {
     load();
     const timer = setInterval(load, 3000);
     return () => clearInterval(timer);
-  }, []);
+  }, [load]);
 
   useEffect(() => {
     function handleOutsideClick(event: MouseEvent) {

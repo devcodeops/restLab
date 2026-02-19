@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { apiGet, getSseUrl } from '../lib/api';
 import { useI18n } from '../lib/i18n';
 
@@ -35,7 +35,6 @@ interface RunDetail {
 }
 
 function Tree({ nodes, level = 0 }: { nodes: CallNode[]; level?: number }) {
-  const { t } = useI18n();
   return (
     <div className="space-y-1">
       {nodes.map((node) => (
@@ -63,7 +62,7 @@ export function RunDetailView({ runId }: { runId: string }) {
   const [error, setError] = useState<string | null>(null);
   const [openSection, setOpenSection] = useState<'graph' | 'calls' | null>(null);
 
-  async function loadDetail() {
+  const loadDetail = useCallback(async () => {
     try {
       const detail = await apiGet<RunDetail>(`/runs/${runId}`);
       setData(detail);
@@ -71,14 +70,15 @@ export function RunDetailView({ runId }: { runId: string }) {
     } catch (err) {
       setError(err instanceof Error ? err.message : t('runs.errorLoadingRun'));
     }
-  }
+  }, [runId, t]);
 
   useEffect(() => {
     loadDetail();
-  }, [runId]);
+  }, [loadDetail]);
 
   useEffect(() => {
-    if (!data?.run || data.run.status !== 'running') return;
+    const runStatus = data?.run?.status;
+    if (runStatus !== 'running') return;
     const source = new EventSource(getSseUrl(`/runs/${runId}/events`));
     source.onmessage = () => {
       loadDetail();
@@ -87,7 +87,7 @@ export function RunDetailView({ runId }: { runId: string }) {
       source.close();
     };
     return () => source.close();
-  }, [data?.run?.status, runId]);
+  }, [data?.run?.status, loadDetail, runId]);
 
   const filteredCalls = useMemo(() => {
     if (!data) return [];

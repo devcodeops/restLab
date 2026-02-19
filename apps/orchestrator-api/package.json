@@ -5,8 +5,10 @@
   "scripts": {
     "build": "nest build",
     "dev": "nest start --watch",
+    "test": "vitest run --config vitest.config.ts",
+    "test:coverage": "vitest run --config vitest.config.ts --coverage",
+    "ci": "pnpm typecheck && pnpm test:coverage && pnpm build",
     "start": "sh -c 'for d in /app/apps/orchestrator-api/dist /app/dist/apps/orchestrator-api /app/dist/src /app/dist; do if [ -d \"$d\" ]; then f=$(find \"$d\" -type f -name main.js | head -n 1); if [ -n \"$f\" ]; then exec node \"$f\"; fi; fi; done; echo \"main.js not found for orchestrator-api\"; find /app/apps/orchestrator-api/dist /app/dist -type f -name \"*.js\" 2>/dev/null | head -n 50; exit 1'",
-    "lint": "echo 'lint not configured for orchestrator-api'",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
